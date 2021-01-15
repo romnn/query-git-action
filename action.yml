@@ -1,0 +1,60 @@
+name: query-git-action
+description: query the state of your git repo
+author: romnnn
+branding:
+  icon: info
+  color: white
+outputs:
+  stable_build_git_commit:
+    value: ${{ steps.query.outputs.STABLE_BUILD_GIT_COMMIT }}
+  stable_build_scm_status:
+    value: ${{ steps.query.outputs.STABLE_BUILD_SCM_STATUS}}
+  stable_build_scm_revision:
+    value: ${{ steps.query.outputs.STABLE_BUILD_SCM_REVISION}}
+  stable_build_major_version:
+    value: ${{ steps.query.outputs.STABLE_BUILD_MAJOR_VERSION}}
+  stable_build_minor_version:
+    value: ${{ steps.query.outputs.STABLE_BUILD_MINOR_VERSION}}
+  stable_docker_tag:
+    value: ${{ steps.query.outputs.STABLE_DOCKER_TAG}}
+  stable_semver_version:
+    value: ${{ steps.query.outputs.STABLE_SEMVER_VERSION}}
+  stable_build_date:
+    value: ${{ steps.query.outputs.STABLE_BUILD_DATE}}
+  stable_version:
+    value: ${{ steps.query.outputs.STABLE_VERSION}}
+  git_commit:
+    value: ${{ steps.query.outputs.GIT_COMMIT}}
+  git_tree_state:
+    value: ${{ steps.query.outputs.GIT_TREE_STATE}}
+  git_version:
+    value: ${{ steps.query.outputs.GIT_VERSION}}
+  git_major:
+    value: ${{ steps.query.outputs.GIT_MAJOR}}
+  git_minor:
+    value: ${{ steps.query.outputs.GIT_MINOR}}
+  build_date:
+    value: ${{ steps.query.outputs.BUILD_DATE}}
+runs:
+  using: composite
+  steps:
+    - run: git fetch --prune --unshallow
+    - id: query
+      shell: bash
+      run: |
+        source ${{ github.action_path }}/query-git.sh
+        echo "::set-output name=STABLE_BUILD_GIT_COMMIT::${STABLE_BUILD_GIT_COMMIT}"
+        echo "::set-output name=STABLE_BUILD_SCM_STATUS::${STABLE_BUILD_SCM_STATUS}"
+        echo "::set-output name=STABLE_BUILD_SCM_REVISION::${STABLE_BUILD_SCM_REVISION}"
+        echo "::set-output name=STABLE_BUILD_MAJOR_VERSION::${STABLE_BUILD_MAJOR_VERSION}"
+        echo "::set-output name=STABLE_BUILD_MINOR_VERSION::${STABLE_BUILD_MINOR_VERSION}"
+        echo "::set-output name=STABLE_DOCKER_TAG::${STABLE_DOCKER_TAG}"
+        echo "::set-output name=STABLE_SEMVER_VERSION::${STABLE_SEMVER_VERSION}"
+        echo "::set-output name=STABLE_BUILD_DATE::${STABLE_BUILD_DATE}"
+        echo "::set-output name=STABLE_VERSION::${STABLE_VERSION}"
+        echo "::set-output name=GIT_COMMIT::${GIT_COMMIT}"
+        echo "::set-output name=GIT_TREE_STATE::${GIT_TREE_STATE}"
+        echo "::set-output name=GIT_VERSION::${GIT_VERSION}"
+        echo "::set-output name=GIT_MAJOR::${GIT_MAJOR}"
+        echo "::set-output name=GIT_MINOR::${GIT_MINOR}"
+        echo "::set-output name=BUILD_DATE::${BUILD_DATE}"
