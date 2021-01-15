@@ -19,7 +19,7 @@ jobs:
       id: query
       uses: 'romnnn/query-git-action@master'
 
-    - name: 'use the action's output variables'
+    - name: "use the action's output variables"
       run: |
         echo '${{ steps.query.outputs.stable_build_git_commit }}'
         echo '${{ steps.query.outputs.stable_build_scm_status }}'
