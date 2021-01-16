@@ -2,6 +2,8 @@
 
 GitHub action to query the state of your git repo.
 
+**Note:** Requires `git` and `curl` to be installed on the runner.
+
 #### Usage
 
 ```yaml

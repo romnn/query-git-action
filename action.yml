@@ -43,7 +43,9 @@ runs:
     - id: query
       shell: bash
       run: |
-        source ${{ github.action_path }}/query-git.sh
+        # using ${{ github.action_path }}/query-git.sh does not work in containers, where the file resides in /__w/_actions/<repo-of-my-script>/<tag-of-repo>/query-git.sh
+        # instead of a brittle if condition, just download it
+        source <(curl -s 'https://raw.githubusercontent.com/romnnn/query-git-action/master/query-git.sh')
         echo "::set-output name=STABLE_BUILD_GIT_COMMIT::${STABLE_BUILD_GIT_COMMIT}"
         echo "::set-output name=STABLE_BUILD_SCM_STATUS::${STABLE_BUILD_SCM_STATUS}"
         echo "::set-output name=STABLE_BUILD_SCM_REVISION::${STABLE_BUILD_SCM_REVISION}"
