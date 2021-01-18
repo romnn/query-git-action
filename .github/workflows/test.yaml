@@ -40,7 +40,7 @@ jobs:
 
       - name: query the git repo
         id: query
-        uses: ./
+        uses: romnnn/query-git-action@master
         with:
           git_root: $HOME/some/strange/place/for/a/git/repo
         
