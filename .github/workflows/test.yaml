@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: query the git repo
         id: query
-        uses: romnnn/query-git-action@master
+        uses: ./
         
       - name: use the action's output variables
         run: |
