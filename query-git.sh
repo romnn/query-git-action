@@ -4,11 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# location of the git repo to query is determined by the GIT_ROOT env variable
-# if GIT_ROOT is not defined, but GITHUB_WORKSPACE is defined when running as an action, use it
-# otherwise, fall back to the current working directory
-export ROOT="${GITHUB_WORKSPACE:-$PWD}"
-export ROOT="${GIT_ROOT:-$ROOT}"
+export ROOT="${GIT_ROOT:-$PWD}"
 
 git::version::get_version_vars() {
   local projGit=(git --work-tree "${ROOT}")
