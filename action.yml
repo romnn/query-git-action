@@ -4,6 +4,10 @@ author: romnnn
 branding:
   icon: info
   color: white
+inputs:
+  git_root:
+    description: location of the git repository to query
+    required: false
 outputs:
   stable_build_git_commit:
     value: ${{ steps.query.outputs.STABLE_BUILD_GIT_COMMIT }}
@@ -43,9 +47,19 @@ runs:
     - id: query
       shell: bash
       run: |
-        # using ${{ github.action_path }}/query-git.sh does not work in containers, where the file resides in /__w/_actions/<repo-of-my-script>/<tag-of-repo>/query-git.sh
-        # instead of a brittle if condition, just download it
-        source <(curl -s 'https://raw.githubusercontent.com/romnnn/query-git-action/master/query-git.sh')
+        export GIT_ROOT="${{ inputs.git_root }}"
+        export QUERY_SCRIPT_UPSTREAM='https://raw.githubusercontent.com/romnnn/query-git-action/master/query-git.sh'
+        export QUERY_SCRIPT="${{ github.action_path }}/query-git.sh"
+        if [[ -x "QUERY_SCRIPT" ]]; then \
+          source "${QUERY_SCRIPT}"; \
+        else \
+          export QUERY_SCRIPT="/__w/_actions/query-git-action/master/query-git.sh"; \
+          if [[ -x "QUERY_SCRIPT" ]]; then \
+            source "${QUERY_SCRIPT}"; \
+          else \
+            source <(curl -s "${QUERY_SCRIPT_UPSTREAM}"); \
+          fi; \
+        fi
         echo "::set-output name=STABLE_BUILD_GIT_COMMIT::${STABLE_BUILD_GIT_COMMIT}"
         echo "::set-output name=STABLE_BUILD_SCM_STATUS::${STABLE_BUILD_SCM_STATUS}"
         echo "::set-output name=STABLE_BUILD_SCM_REVISION::${STABLE_BUILD_SCM_REVISION}"
