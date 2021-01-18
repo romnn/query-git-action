@@ -52,7 +52,7 @@ runs:
         export GIT_ROOT="${GIT_ROOT:-$PWD}"
         echo "GIT_ROOT=${GIT_ROOT}" >> $GITHUB_ENV
         echo "unshallow git repository at ${GIT_ROOT}"
-        git --work-tree "${GIT_ROOT}" fetch --prune --unshallow
+        git --git-dir "${GIT_ROOT}/.git" --work-tree "${GIT_ROOT}" fetch --prune --unshallow
       shell: bash
 
     - id: query

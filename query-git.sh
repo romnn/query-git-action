@@ -7,7 +7,7 @@ set -o pipefail
 export ROOT="${GIT_ROOT:-$PWD}"
 
 git::version::get_version_vars() {
-  local projGit=(git --work-tree "${ROOT}")
+  local projGit=(git --git-dir "${ROOT}/.git" --work-tree "${ROOT}")
 
   if [[ -n ${GIT_COMMIT-} ]] || GIT_COMMIT=$("${projGit[@]}" rev-parse "HEAD^{commit}" 2> /dev/null); then
     if [[ -z ${GIT_TREE_STATE-} ]]; then
