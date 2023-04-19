@@ -37,7 +37,7 @@ jobs:
         run: |
           export OUT="$HOME/some/strange/place/for/a/git/repo"
           mkdir -p "${OUT}"
-          git clone https://github.com/romnn/filmborders.git "${OUT}"
+          git clone https://github.com/romnn/film-borders.git "${OUT}"
 
       - name: query the git repo
         id: query
