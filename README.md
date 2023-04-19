@@ -15,13 +15,13 @@ jobs:
   build:
     runs-on: 'ubuntu-latest'
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
-    - name: 'query git repo'
+    - name: query git repo
       id: query
-      uses: 'romnnn/query-git-action@master'
+      uses: romnn/query-git-action@main
 
-    - name: "use the action's output variables"
+    - name: show output variables
       run: |
         echo '${{ steps.query.outputs.stable_build_git_commit }}'
         echo '${{ steps.query.outputs.stable_build_scm_status }}'

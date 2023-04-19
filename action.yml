@@ -40,6 +40,8 @@ outputs:
   build_date:
     value: ${{ steps.query.outputs.BUILD_DATE}}
 runs:
+  # using: node16
+  # main: dist/index.js
   using: composite
   steps:
     - name: unshallow git repository
