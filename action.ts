@@ -2,7 +2,7 @@ import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import { ExecOutput, ExecOptions } from "@actions/exec";
 import * as path from "path";
-import { exec as execChildProcess } from 'node:child_process';
+import { exec as execChildProcess } from "node:child_process";
 // var exec = require('child_process').execFile;
 
 // async function getVersion(): Promise<string> {
@@ -39,6 +39,7 @@ async function gitCommand(
     repo,
     ...args,
   ];
+  // const cmdString = cmd.join("");
   const output = await exec.getExecOutput("git", cmd, {
     cwd: repo,
     ...options,
@@ -52,7 +53,9 @@ async function gitCommand(
       core.info(output.stdout.trim());
       core.error(output.stderr.trim());
       throw new Error(
-        `command "git ${cmd.join(' ')}" failed with exit code ${output.exitCode}`
+        `command "git ${cmd.join(" ")}" failed with exit code ${
+          output.exitCode
+        }`
       );
     }
   }
@@ -77,10 +80,11 @@ async function unshallowRepo(repo: string): Promise<void> {
   }
 }
 
-function execNative(command: string): Promise<{ error?: string, stdout: string, stderr: string }> {
-  return new Promise(function(resolve, reject) {
+function execNative(
+  command: string
+): Promise<{ error?: string; stdout: string; stderr: string }> {
+  return new Promise(function (resolve, reject) {
     execChildProcess(command, (error, stdout, stderr) => {
-
       stdout = stdout.trim();
       stderr = stderr.trim();
       if (error) {
@@ -102,8 +106,10 @@ async function run(): Promise<void> {
 
   await unshallowRepo(repo);
 
-  const gitCommit = process.env["GIT_COMMIT"] ??
-    (await gitCommand(repo, ["rev-parse", "HEAD^{commit}"], { silent: true })
+  const gitCommit =
+    process.env["GIT_COMMIT"] ??
+    (
+      await gitCommand(repo, ["rev-parse", "HEAD^{commit}"], { silent: true })
     ).stdout.trim();
   console.log(gitCommit);
 
@@ -112,91 +118,82 @@ async function run(): Promise<void> {
     await gitCommand(repo, ["status", "--porcelain"], { silent: true })
   ).stdout.trim();
   console.log(gitStatus);
-  const gitTreeState = process.env["GIT_TREE_STATE"] ?? gitStatus === "" ? "clean" : "dirty";
+  const isDirty =
+    process.env["GIT_TREE_STATE"] ?? gitStatus === "" ? false : true;
+  const gitTreeState = isDirty ? "clean" : "dirty";
   console.log(gitTreeState);
 
   // use git describe to find the version based on tags.
-  const gitVersion = (
-    await execNative(
-      [
-        "git",
-        "--git-dir",
-        path.join(repo, ".git"),
-        "--work-tree",
-        repo,
-        "describe",
-        "--tags",
-        // "--always",
-        "--match='v*'",
-        // "--abbrev=14",
-        // gitCommit,
-        // `${gitCommit}^{commit}`,
-      ].join(" "),
-    )
-  ).stdout;
-  console.log(gitVersion);
-
-  const gitVersion2 = (
+  let gitVersion = (
     await gitCommand(
       repo,
       [
         "describe",
         "--tags",
-        // "--always",
-        "--match='v*'",
-        // "--abbrev=14",
-        // gitCommit,
+        "--match=v*",
+        "--abbrev=14",
+        gitCommit,
         // `${gitCommit}^{commit}`,
       ],
-      { silent: false }
+      { silent: true }
     )
-  ).stdout;
-  console.log(gitVersion2);
+  ).stdout.trim();
+  console.log(gitVersion);
 
   // This translates the "git describe" to an actual semver.org
   // compatible semantic version that looks something like this:
   //    v1.1.0-alpha.0.6+84c76d1142ea4d
 
-  // DASHES_IN_VERSION=$(echo "${GIT_VERSION}" | sed "s/[^-]//g")
+  // console.log(gitVersion.match());
+  const gitVersionParts = gitVersion.split("-");
+  // console.log(gitVersionParts);
 
-  //   DASHES_IN_VERSION=$(echo "${GIT_VERSION}" | sed "s/[^-]//g")
-  //   if [[ "${DASHES_IN_VERSION}" == "---" ]]; then
-  //     # shellcheck disable=SC2001
-  //     # We have distance to subversion (v1.1.0-subversion-1-gCommitHash)
-  //     GIT_VERSION=$(echo "${GIT_VERSION}" | sed "s/-\([0-9]\{1,\}\)-g\([0-9a-f]\{14\}\)$/.\1\+\2/")
-  //   elif [[ "${DASHES_IN_VERSION}" == "--" ]]; then
-  //     # shellcheck disable=SC2001
-  //     # We have distance to base tag (v1.1.0-1-gCommitHash)
-  //     GIT_VERSION=$(echo "${GIT_VERSION}" | sed "s/-g\([0-9a-f]\{14\}\)$/+\1/")
-  //   fi
-  //   if [[ "${GIT_TREE_STATE}" == "dirty" ]]; then
-  //     # git describe --dirty only considers changes to existing files, but
-  //     # that is problematic since new untracked .go files affect the build,
-  //     # so use our idea of "dirty" from git status instead.
-  //     GIT_VERSION+="-dirty"
-  //   fi
-  //
-  //   # Try to match the "git describe" output to a regex to try to extract
-  //   # the "major" and "minor" versions and whether this is the exact tagged
-  //   # version or whether the tree is between two tagged versions.
-  //   if [[ "${GIT_VERSION}" =~ ^v([0-9]+)\.([0-9]+)(\.[0-9]+)?([-].*)?([+].*)?$ ]]; then
-  //     GIT_MAJOR=${BASH_REMATCH[1]}
-  //     GIT_MINOR=${BASH_REMATCH[2]}
-  //     if [[ -n "${BASH_REMATCH[4]}" ]]; then
-  //       GIT_MINOR+="+"
-  //     fi
-  //   fi
-  //
-  //   # If GIT_VERSION is not a valid Semantic Version, then refuse to build.
-  //   if ! [[ "${GIT_VERSION}" =~ ^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
-  //     echo "GIT_VERSION should be a valid Semantic Version. Current value: ${GIT_VERSION}"
-  //     echo "Please see more details here: https://semver.org"
-  //     exit 1
-  //   fi
-  // fi
+  // v1.0.0-13-g34467b0668f7c9
+  // v1.0.0-13+34467b0668f7c9-dirty
 
-  // GIT_COMMIT=$("${projGit[@]}" rev-parse "HEAD^{commit}" 2> /dev/null)
-  //
+  if (gitVersionParts.length === 4) {
+    // we have distance to subversion (v1.1.0-subversion-1-gCommitHash)
+    gitVersion = `${gitVersionParts.slice(0, 2).join("-")}.${
+      gitVersionParts[2]
+    }+${gitVersionParts[3]}`;
+  } else if (gitVersionParts.length === 3) {
+    // we have distance to base tag (v1.1.0-1-gCommitHash)
+    gitVersion = `${gitVersionParts.slice(0, 2).join("-")}+${
+      gitVersionParts[2]
+    }`;
+  }
+  if (isDirty) {
+    // git describe --dirty only considers changes to existing files, but
+    // that is problematic since new untracked .go files affect the build,
+    // so use our idea of "dirty" from git status instead.
+    gitVersion += "-dirty";
+  }
+  console.log(gitVersion);
+
+  // Try to match the "git describe" output to a regex to try to extract
+  // the "major" and "minor" versions and whether this is the exact tagged
+  // version or whether the tree is between two tagged versions.
+  const maybeSemVer = /^v([0-9]+)\.([0-9]+)(\.[0-9]+)?([-].*)?([+].*)?$/;
+  const maybeSemVerMatch = gitVersion.match(maybeSemVer);
+  if (maybeSemVerMatch) {
+    console.log(maybeSemVerMatch);
+    const gitMajor = maybeSemVerMatch[1];
+    let gitMinor = maybeSemVerMatch[2];
+    if (maybeSemVerMatch.length > 4 && maybeSemVerMatch[4]) {
+      gitMinor += "+";
+    }
+    console.log(gitMajor, gitMinor);
+  }
+
+  // If not a valid semantic version, fail
+  const validSemVer = /^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
+  if (!gitVersion.match(validSemVer)) {
+    core.setFailed(
+      `git version should be a valid semantic version. current value: ${gitVersion}`
+    );
+  }
+
+  core.setOutput("STABLE_BUILD_GIT_COMMIT", gitCommit);
   // echo "::set-output name=STABLE_BUILD_GIT_COMMIT::${STABLE_BUILD_GIT_COMMIT}"
   // echo "::set-output name=STABLE_BUILD_SCM_STATUS::${STABLE_BUILD_SCM_STATUS}"
   // echo "::set-output name=STABLE_BUILD_SCM_REVISION::${STABLE_BUILD_SCM_REVISION}"
@@ -212,46 +209,6 @@ async function run(): Promise<void> {
   // echo "::set-output name=GIT_MAJOR::${GIT_MAJOR}"
   // echo "::set-output name=GIT_MINOR::${GIT_MINOR}"
   // echo "::set-output name=BUILD_DATE::${BUILD_DATE}"
-
-  //
-  // const repo = new Repo();
-  // const version = await getVersion();
-  // core.debug(`version=${version}`);
-  //
-  // let release;
-  // try {
-  //   release =
-  //     version === "" || version === "latest"
-  //       ? await repo.getLatestRelease()
-  //       : await repo.getReleaseByTag(version);
-  // } catch (err: unknown) {
-  //   throw new Error(
-  //     `failed to fetch ${version} release for ${repo.fullName()}: ${err}`
-  //   );
-  // }
-  // core.debug(
-  //   `found ${
-  //     release.assets().length
-  //   } assets for ${version} release of ${repo.fullName()}`
-  // );
-  //
-  // const { platform, arch } = new RustTarget();
-  // core.debug(`host system: platform=${platform} arch=${arch}`);
-  //
-  // // publish-crates-action-x86_64-unknown-linux-gnu.tar.gz
-  // const bin = "publish-crates-action";
-  // const asset = `${bin}-${arch}-unknown-${platform}-gnu.tar.gz`;
-  //
-  // let downloaded;
-  // try {
-  //   downloaded = await release.downloadAsset(asset, { cache: false });
-  // } catch (err: unknown) {
-  //   throw new Error(`failed to download asset ${asset}: ${err}`);
-  // }
-  //
-  // core.addPath(downloaded);
-  // const executable = path.join(downloaded, bin);
-  // await exec.exec(executable);
 }
 
 run().catch((error) => core.setFailed(error.message));

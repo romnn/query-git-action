@@ -26,7 +26,9 @@ git::version::get_version_vars() {
       #   v1.1.0-alpha.0.6+84c76d1142ea4d
       #
 
+      echo "${GIT_VERSION}"
       DASHES_IN_VERSION=$(echo "${GIT_VERSION}" | sed "s/[^-]//g")
+      echo "${DASHES_IN_VERSION}"
       if [[ "${DASHES_IN_VERSION}" == "---" ]]; then
         # shellcheck disable=SC2001
         # We have distance to subversion (v1.1.0-subversion-1-gCommitHash)
@@ -42,6 +44,8 @@ git::version::get_version_vars() {
         # so use our idea of "dirty" from git status instead.
         GIT_VERSION+="-dirty"
       fi
+
+      echo "${GIT_VERSION}"
 
       # Try to match the "git describe" output to a regex to try to extract
       # the "major" and "minor" versions and whether this is the exact tagged
@@ -66,18 +70,38 @@ git::version::get_version_vars() {
 
 git::version::get_version_vars
 
-export STABLE_BUILD_GIT_COMMIT=${GIT_COMMIT-}
-export STABLE_BUILD_SCM_STATUS=${GIT_TREE_STATE-}
-export STABLE_BUILD_SCM_REVISION=${GIT_VERSION-}
-export STABLE_BUILD_MAJOR_VERSION=${GIT_MAJOR-}
-export STABLE_BUILD_MINOR_VERSION=${GIT_MINOR-}
-export STABLE_DOCKER_TAG=${GIT_VERSION/+/_}
-export STABLE_SEMVER_VERSION=$(echo ${STABLE_DOCKER_TAG} | sed -e 's/-.*//')
-export STABLE_BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-export STABLE_VERSION=${STABLE_DOCKER_TAG}
-export GIT_COMMIT=${STABLE_BUILD_GIT_COMMIT}
-export GIT_TREE_STATE=${GIT_TREE_STATE-}
-export GIT_VERSION=${STABLE_BUILD_SCM_REVISION}
-export GIT_MAJOR=${GIT_MAJOR-}
-export GIT_MINOR=${GIT_MINOR-}
-export BUILD_DATE=${STABLE_BUILD_DATE}
+STABLE_BUILD_GIT_COMMIT=${GIT_COMMIT-}
+echo stable_build_git_commit=${STABLE_BUILD_GIT_COMMIT-}
+echo stable_build_scm_status=${GIT_TREE_STATE-}
+STABLE_BUILD_SCM_REVISION=${GIT_VERSION-}
+echo stable_build_scm_revision=${STABLE_BUILD_SCM_REVISION-}
+echo stable_build_major_version=${GIT_MAJOR-}
+echo stable_build_minor_version=${GIT_MINOR-}
+STABLE_DOCKER_TAG=${GIT_VERSION/+/_}
+echo stable_docker_tag=${STABLE_DOCKER_TAG}
+echo stable_semver_version=$(echo ${STABLE_DOCKER_TAG} | sed -e 's/-.*//')
+STABLE_BUILD_DATE=$(date -u +'%y-%m-%dt%h:%m:%sz')
+echo stable_build_date=${STABLE_BUILD_DATE}
+echo stable_version=${STABLE_DOCKER_TAG}
+echo git_commit=${STABLE_BUILD_GIT_COMMIT}
+echo git_tree_state=${GIT_TREE_STATE-}
+echo git_version=${STABLE_BUILD_SCM_REVISION}
+echo git_major=${GIT_MAJOR-}
+echo git_minor=${GIT_MINOR-}
+echo build_date=${STABLE_BUILD_DATE}
+#
+# export stable_build_git_commit=${git_commit-}
+# export stable_build_scm_status=${git_tree_state-}
+# export stable_build_scm_revision=${git_version-}
+# export stable_build_major_version=${git_major-}
+# export stable_build_minor_version=${git_minor-}
+# export stable_docker_tag=${git_version/+/_}
+# export stable_semver_version=$(echo ${stable_docker_tag} | sed -e 's/-.*//')
+# export stable_build_date=$(date -u +'%y-%m-%dt%h:%m:%sz')
+# export stable_version=${stable_docker_tag}
+# export git_commit=${stable_build_git_commit}
+# export git_tree_state=${git_tree_state-}
+# export git_version=${stable_build_scm_revision}
+# export git_major=${git_major-}
+# export git_minor=${git_minor-}
+# export build_date=${stable_build_date}
