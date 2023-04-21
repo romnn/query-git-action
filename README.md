@@ -39,3 +39,13 @@ jobs:
         echo '${{ steps.query.outputs.git_minor }}'
         echo '${{ steps.query.outputs.build_date }}'
 ```
+
+#### Development
+
+```bash
+# find a tagged commit
+git show-ref --tags
+
+# use that commit during development
+GIT_COMMIT=<TAGGED_COMMIT> yarn run run
+```

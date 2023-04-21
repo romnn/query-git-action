@@ -2,19 +2,22 @@
   "private": true,
   "author": "romnn <contact@romnn.com>",
   "license": "MIT",
-  "description": "Download and cache github action release binaries",
+  "description": "query the state of a git repo",
   "scripts": {
     "build": "rimraf ./dist && ncc build action.ts --minify --out ./dist",
+    "run": "ts-node action.ts",
     "check": "tsc --noEmit",
-    "format": "prettier *.json *.ts --write"
+    "format": "prettier *.json *.ts --write",
+    "lint": "eslint . --ext .js,.cjs,.ts,.cts, --fix"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
-    "@actions/exec": "^1.1.1",
-    "action-get-release": "^0.0.13"
+    "@actions/exec": "^1.1.1"
   },
   "devDependencies": {
+    "@types/node": "^18.11.9",
     "@vercel/ncc": "^0.36.1",
+    "ts-node": "^10.9.1",
     "rimraf": "^5.0.0",
     "typescript": "^5.0.4"
   }

@@ -1,5 +1,5 @@
 name: query-git-action
-description: query the state of your git repo
+description: query the state of a git repo
 author: romnnn
 branding:
   icon: info

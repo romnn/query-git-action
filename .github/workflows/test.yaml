@@ -4,7 +4,15 @@ on: ['push']
 
 jobs:
   query:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    name: query on ${{ matrix.os }}
+    strategy: 
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: query the git repo
@@ -30,7 +38,15 @@ jobs:
           echo '${{ steps.query.outputs.build_date }}'
 
   query-custom-location:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    name: query custom location on ${{ matrix.os }}
+    strategy: 
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@v3
       - name: clone a repo to custom location
