@@ -2,7 +2,7 @@
 
 GitHub action to query the state of your git repo.
 
-**Note:** Requires `git` and to be installed on the runner.
+**Note:** Requires `git` to be installed on the runner.
 
 #### Usage
 

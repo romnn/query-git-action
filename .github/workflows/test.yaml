@@ -50,7 +50,7 @@ jobs:
 
       - name: clone repo into custom location
         run: |
-          mkdir -p "${{ env.REPO_DEST }}"
+          # mkdir -p "${{ env.REPO_DEST }}"
           git clone "${{ env.REPO_URL }}" "${{ env.REPO_DEST }}"
 
       - name: query the git repo
