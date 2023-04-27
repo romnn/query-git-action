@@ -32,6 +32,8 @@ jobs:
         echo "${{ steps.query.outputs.docker_tag }}"
         echo "${{ steps.query.outputs.semver_version }}"
         echo "${{ steps.query.outputs.build_date }}"
+        echo "${{ steps.query.outputs.github_repo_user }}"
+        echo "${{ steps.query.outputs.github_repo_name }}"
 ```
 
 #### Development

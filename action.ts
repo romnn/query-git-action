@@ -177,6 +177,19 @@ async function run(): Promise<void> {
     );
   }
 
+  const githubRepo = process.env["GITHUB_REPOSITORY"];
+  let repoUser,
+    repoName = "";
+  if (githubRepo) {
+    const githubRepoParts = githubRepo.split("/");
+    if (githubRepoParts.length === 2) {
+      repoUser = githubRepoParts[0];
+      repoName = githubRepoParts[1];
+    }
+  }
+  core.setOutput("GITHUB_REPO_USER", repoUser);
+  core.setOutput("GITHUB_REPO_NAME", repoName);
+
   core.setOutput("GIT_COMMIT", gitCommit);
   core.setOutput("SCM_STATUS", gitTreeState);
   core.setOutput("TREE_STATE", gitTreeState);

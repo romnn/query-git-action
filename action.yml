@@ -27,6 +27,10 @@ outputs:
     value: ${{ steps.query.outputs.SEMVER_VERSION}}
   build_date:
     value: ${{ steps.query.outputs.BUILD_DATE}}
+  github_repo_user:
+    value: ${{ steps.query.outputs.GITHUB_REPO_USER }}
+  github_repo_name:
+    value: ${{ steps.query.outputs.GITHUB_REPO_NAME }}
 runs:
   using: node16
   main: dist/index.js
