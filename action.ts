@@ -3,23 +3,6 @@ import * as exec from "@actions/exec";
 import { ExecOutput, ExecOptions } from "@actions/exec";
 import * as path from "path";
 import { exec as execChildProcess } from "node:child_process";
-// var exec = require('child_process').execFile;
-
-// async function getVersion(): Promise<string> {
-//   let version = "latest";
-//   const manifest = await parseCargoPackageManifestAsync(
-//     path.join(__dirname, "../Cargo.toml")
-//   );
-//   let manifestVersion = manifest.package?.version;
-//   if (manifestVersion && manifestVersion !== "") {
-//     version = `v${manifestVersion}`;
-//   }
-//   let versionOverride = core.getInput("version");
-//   if (versionOverride && versionOverride !== "") {
-//     version = versionOverride;
-//   }
-//   return version;
-// }
 
 function getInput(name: string): string | undefined {
   const value = core.getInput(name);
@@ -97,56 +80,31 @@ function execNative(
   });
 }
 
-async function run(): Promise<void> {
-  const workspace = process.env["GITHUB_WORKSPACE"];
-  const repo = getInput("repo") ?? workspace ?? process.cwd();
-  if (!repo) {
-    throw new Error("missing repo root: set the `repo` input variable.");
-  }
+function secondsSinceEpoch(d: Date): number {
+  const utcMillisSinceEpoch = d.getTime();
+  // + (d.getTimezoneOffset() * 60 * 1000);
+  const utcSecsSinceEpoch = Math.round(utcMillisSinceEpoch / 1000);
+  return utcSecsSinceEpoch;
+}
 
-  await unshallowRepo(repo);
-
-  const gitCommit =
-    process.env["GIT_COMMIT"] ??
-    (
-      await gitCommand(repo, ["rev-parse", "HEAD^{commit}"], { silent: true })
-    ).stdout.trim();
-  console.log(gitCommit);
-
-  // check if the tree is dirty (default to dirty)
-  const gitStatus = (
-    await gitCommand(repo, ["status", "--porcelain"], { silent: true })
-  ).stdout.trim();
-  console.log(gitStatus);
-  const isDirty =
-    process.env["GIT_TREE_STATE"] ?? gitStatus === "" ? false : true;
-  const gitTreeState = isDirty ? "clean" : "dirty";
-  console.log(gitTreeState);
-
+async function getGitVersion(repo: {
+  repo: string;
+  commit: string;
+}): Promise<string> {
   // use git describe to find the version based on tags.
   let gitVersion = (
     await gitCommand(
-      repo,
-      [
-        "describe",
-        "--tags",
-        "--match=v*",
-        "--abbrev=14",
-        gitCommit,
-        // `${gitCommit}^{commit}`,
-      ],
+      repo.repo,
+      ["describe", "--tags", "--match=v*", "--abbrev=14", repo.commit],
       { silent: true }
     )
   ).stdout.trim();
-  console.log(gitVersion);
 
   // This translates the "git describe" to an actual semver.org
   // compatible semantic version that looks something like this:
   //    v1.1.0-alpha.0.6+84c76d1142ea4d
 
-  // console.log(gitVersion.match());
   const gitVersionParts = gitVersion.split("-");
-  // console.log(gitVersionParts);
 
   // v1.0.0-13-g34467b0668f7c9
   // v1.0.0-13+34467b0668f7c9-dirty
@@ -162,27 +120,69 @@ async function run(): Promise<void> {
       gitVersionParts[2]
     }`;
   }
+
+  return gitVersion;
+}
+
+function getBuildDate(): string {
+  const buildDate = new Date();
+  const d = {
+    year: buildDate.getFullYear(),
+    month: ("0" + (buildDate.getMonth() + 1)).slice(-2),
+    day: ("0" + buildDate.getDate()).slice(-2),
+    // monthName: monthNames[buildDate.getMonth()],
+    monthName: buildDate.toLocaleString("en-us", { month: "short" }),
+    epoch: secondsSinceEpoch(buildDate),
+  };
+  // 23-04-26tApr:04:1682515664z
+  // $(date -u +'%y-%m-%dt%h:%m:%sz')
+  return `${d.year}-${d.month}-${d.day}t${d.monthName}:${d.month}:${d.epoch}z`;
+}
+
+async function run(): Promise<void> {
+  const workspace = process.env["GITHUB_WORKSPACE"];
+  const repo = getInput("repo") ?? workspace ?? process.cwd();
+  if (!repo) {
+    throw new Error("missing repo root: set the `repo` input variable.");
+  }
+
+  await unshallowRepo(repo);
+
+  const gitCommit =
+    process.env["GIT_COMMIT"] ??
+    (
+      await gitCommand(repo, ["rev-parse", "HEAD^{commit}"], { silent: true })
+    ).stdout.trim();
+
+  // check if the tree is dirty (default to dirty)
+  const gitStatus = (
+    await gitCommand(repo, ["status", "--porcelain"], { silent: true })
+  ).stdout.trim();
+  const isDirty =
+    process.env["GIT_TREE_STATE"] ?? gitStatus === "" ? false : true;
+  const gitTreeState = isDirty ? "clean" : "dirty";
+
+  let gitVersion = await getGitVersion({ repo, commit: gitCommit });
   if (isDirty) {
     // git describe --dirty only considers changes to existing files, but
     // that is problematic since new untracked .go files affect the build,
     // so use our idea of "dirty" from git status instead.
     gitVersion += "-dirty";
   }
-  console.log(gitVersion);
 
   // Try to match the "git describe" output to a regex to try to extract
   // the "major" and "minor" versions and whether this is the exact tagged
   // version or whether the tree is between two tagged versions.
   const maybeSemVer = /^v([0-9]+)\.([0-9]+)(\.[0-9]+)?([-].*)?([+].*)?$/;
   const maybeSemVerMatch = gitVersion.match(maybeSemVer);
+  let gitMajor,
+    gitMinor = "";
   if (maybeSemVerMatch) {
-    console.log(maybeSemVerMatch);
-    const gitMajor = maybeSemVerMatch[1];
-    let gitMinor = maybeSemVerMatch[2];
+    gitMajor = maybeSemVerMatch[1];
+    gitMinor = maybeSemVerMatch[2];
     if (maybeSemVerMatch.length > 4 && maybeSemVerMatch[4]) {
       gitMinor += "+";
     }
-    console.log(gitMajor, gitMinor);
   }
 
   // If not a valid semantic version, fail
@@ -193,22 +193,16 @@ async function run(): Promise<void> {
     );
   }
 
-  core.setOutput("STABLE_BUILD_GIT_COMMIT", gitCommit);
-  // echo "::set-output name=STABLE_BUILD_GIT_COMMIT::${STABLE_BUILD_GIT_COMMIT}"
-  // echo "::set-output name=STABLE_BUILD_SCM_STATUS::${STABLE_BUILD_SCM_STATUS}"
-  // echo "::set-output name=STABLE_BUILD_SCM_REVISION::${STABLE_BUILD_SCM_REVISION}"
-  // echo "::set-output name=STABLE_BUILD_MAJOR_VERSION::${STABLE_BUILD_MAJOR_VERSION}"
-  // echo "::set-output name=STABLE_BUILD_MINOR_VERSION::${STABLE_BUILD_MINOR_VERSION}"
-  // echo "::set-output name=STABLE_DOCKER_TAG::${STABLE_DOCKER_TAG}"
-  // echo "::set-output name=STABLE_SEMVER_VERSION::${STABLE_SEMVER_VERSION}"
-  // echo "::set-output name=STABLE_BUILD_DATE::${STABLE_BUILD_DATE}"
-  // echo "::set-output name=STABLE_VERSION::${STABLE_VERSION}"
-  // echo "::set-output name=GIT_COMMIT::${GIT_COMMIT}"
-  // echo "::set-output name=GIT_TREE_STATE::${GIT_TREE_STATE}"
-  // echo "::set-output name=GIT_VERSION::${GIT_VERSION}"
-  // echo "::set-output name=GIT_MAJOR::${GIT_MAJOR}"
-  // echo "::set-output name=GIT_MINOR::${GIT_MINOR}"
-  // echo "::set-output name=BUILD_DATE::${BUILD_DATE}"
+  core.setOutput("GIT_COMMIT", gitCommit);
+  core.setOutput("SCM_STATUS", gitTreeState);
+  core.setOutput("TREE_STATE", gitTreeState);
+  core.setOutput("SCM_REVISION", gitVersion);
+  core.setOutput("MAJOR_VERSION", gitMajor);
+  core.setOutput("MINOR_VERSION", gitMinor);
+  const stableDockerTag = gitVersion.replace("+", "_");
+  core.setOutput("DOCKER_TAG", stableDockerTag);
+  core.setOutput("SEMVER_VERSION", stableDockerTag.split("-")[0]);
+  core.setOutput("BUILD_DATE", getBuildDate());
 }
 
 run().catch((error) => core.setFailed(error.message));
