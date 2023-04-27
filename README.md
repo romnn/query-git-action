@@ -2,18 +2,18 @@
 
 GitHub action to query the state of your git repo.
 
-**Note:** Requires `git` and `curl` to be installed on the runner.
+**Note:** Requires `git` and to be installed on the runner.
 
 #### Usage
 
 ```yaml
 # .github/workflows/ci.yml
-name: CI
-on: ['push']
+name: ci
+on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: 'ubuntu-latest'
+  ci:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
 
@@ -23,21 +23,15 @@ jobs:
 
     - name: show output variables
       run: |
-        echo '${{ steps.query.outputs.stable_build_git_commit }}'
-        echo '${{ steps.query.outputs.stable_build_scm_status }}'
-        echo '${{ steps.query.outputs.stable_build_scm_revision }}'
-        echo '${{ steps.query.outputs.stable_build_major_version }}'
-        echo '${{ steps.query.outputs.stable_build_minor_version }}'
-        echo '${{ steps.query.outputs.stable_docker_tag }}'
-        echo '${{ steps.query.outputs.stable_semver_version }}'
-        echo '${{ steps.query.outputs.stable_build_date }}'
-        echo '${{ steps.query.outputs.stable_version }}'
-        echo '${{ steps.query.outputs.git_commit }}'
-        echo '${{ steps.query.outputs.git_tree_state }}'
-        echo '${{ steps.query.outputs.git_version }}'
-        echo '${{ steps.query.outputs.git_major }}'
-        echo '${{ steps.query.outputs.git_minor }}'
-        echo '${{ steps.query.outputs.build_date }}'
+        echo "${{ steps.query.outputs.git_commit }}"
+        echo "${{ steps.query.outputs.scm_status }}"
+        echo "${{ steps.query.outputs.tree_state }}"
+        echo "${{ steps.query.outputs.scm_revision }}"
+        echo "${{ steps.query.outputs.major_version }}"
+        echo "${{ steps.query.outputs.minor_version }}"
+        echo "${{ steps.query.outputs.docker_tag }}"
+        echo "${{ steps.query.outputs.semver_version }}"
+        echo "${{ steps.query.outputs.build_date }}"
 ```
 
 #### Development

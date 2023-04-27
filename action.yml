@@ -1,90 +1,32 @@
 name: query-git-action
 description: query the state of a git repo
-author: romnnn
+author: romnn
 branding:
   icon: info
   color: white
 inputs:
-  git_root:
-    description: location of the git repository to query
+  repo:
+    description: path of the git repository to query
     required: false
 outputs:
-  stable_build_git_commit:
-    value: ${{ steps.query.outputs.STABLE_BUILD_GIT_COMMIT }}
-  stable_build_scm_status:
-    value: ${{ steps.query.outputs.STABLE_BUILD_SCM_STATUS}}
-  stable_build_scm_revision:
-    value: ${{ steps.query.outputs.STABLE_BUILD_SCM_REVISION}}
-  stable_build_major_version:
-    value: ${{ steps.query.outputs.STABLE_BUILD_MAJOR_VERSION}}
-  stable_build_minor_version:
-    value: ${{ steps.query.outputs.STABLE_BUILD_MINOR_VERSION}}
-  stable_docker_tag:
-    value: ${{ steps.query.outputs.STABLE_DOCKER_TAG}}
-  stable_semver_version:
-    value: ${{ steps.query.outputs.STABLE_SEMVER_VERSION}}
-  stable_build_date:
-    value: ${{ steps.query.outputs.STABLE_BUILD_DATE}}
-  stable_version:
-    value: ${{ steps.query.outputs.STABLE_VERSION}}
   git_commit:
-    value: ${{ steps.query.outputs.GIT_COMMIT}}
-  git_tree_state:
-    value: ${{ steps.query.outputs.GIT_TREE_STATE}}
-  git_version:
-    value: ${{ steps.query.outputs.GIT_VERSION}}
-  git_major:
-    value: ${{ steps.query.outputs.GIT_MAJOR}}
-  git_minor:
-    value: ${{ steps.query.outputs.GIT_MINOR}}
+    value: ${{ steps.query.outputs.GIT_COMMIT }}
+  scm_status:
+    value: ${{ steps.query.outputs.SCM_STATUS }}
+  tree_state:
+    value: ${{ steps.query.outputs.TREE_STATE }}
+  scm_revision:
+    value: ${{ steps.query.outputs.SCM_REVISION }}
+  major_version:
+    value: ${{ steps.query.outputs.MAJOR_VERSION }}
+  minor_version:
+    value: ${{ steps.query.outputs.MINOR_VERSION}}
+  docker_tag:
+    value: ${{ steps.query.outputs.DOCKER_TAG}}
+  semver_version:
+    value: ${{ steps.query.outputs.SEMVER_VERSION}}
   build_date:
     value: ${{ steps.query.outputs.BUILD_DATE}}
 runs:
-  # using: node16
-  # main: dist/index.js
-  using: composite
-  steps:
-    - name: unshallow git repository
-      run: |
-        # location of the git repo to query is determined by the git_root input variable
-        # if inputs.git_root is not defined, use GITHUB_WORKSPACE from the checkout action
-        # otherwise, fall back to the current working directory
-        export GIT_ROOT="${{ inputs.git_root }}"
-        export GIT_ROOT="${GIT_ROOT:-$GITHUB_WORKSPACE}"
-        export GIT_ROOT="${GIT_ROOT:-$PWD}"
-        echo "GIT_ROOT=${GIT_ROOT}" >> $GITHUB_ENV
-        echo "unshallow git repository at ${GIT_ROOT}"
-        git --git-dir "${GIT_ROOT}/.git" --work-tree "${GIT_ROOT}" fetch --prune --unshallow || true
-      shell: bash
-
-    - id: query
-      shell: bash
-      run: |
-        echo "query git repository at ${GIT_ROOT}"
-        export QUERY_SCRIPT_UPSTREAM='https://raw.githubusercontent.com/romnnn/query-git-action/master/query-git.sh'
-        export QUERY_SCRIPT="${{ github.action_path }}/query-git.sh"
-        if [[ -x "QUERY_SCRIPT" ]]; then \
-          source "${QUERY_SCRIPT}"; \
-        else \
-          export QUERY_SCRIPT="/__w/_actions/query-git-action/master/query-git.sh"; \
-          if [[ -x "QUERY_SCRIPT" ]]; then \
-            source "${QUERY_SCRIPT}"; \
-          else \
-            source <(curl -s "${QUERY_SCRIPT_UPSTREAM}"); \
-          fi; \
-        fi
-        echo "::set-output name=STABLE_BUILD_GIT_COMMIT::${STABLE_BUILD_GIT_COMMIT}"
-        echo "::set-output name=STABLE_BUILD_SCM_STATUS::${STABLE_BUILD_SCM_STATUS}"
-        echo "::set-output name=STABLE_BUILD_SCM_REVISION::${STABLE_BUILD_SCM_REVISION}"
-        echo "::set-output name=STABLE_BUILD_MAJOR_VERSION::${STABLE_BUILD_MAJOR_VERSION}"
-        echo "::set-output name=STABLE_BUILD_MINOR_VERSION::${STABLE_BUILD_MINOR_VERSION}"
-        echo "::set-output name=STABLE_DOCKER_TAG::${STABLE_DOCKER_TAG}"
-        echo "::set-output name=STABLE_SEMVER_VERSION::${STABLE_SEMVER_VERSION}"
-        echo "::set-output name=STABLE_BUILD_DATE::${STABLE_BUILD_DATE}"
-        echo "::set-output name=STABLE_VERSION::${STABLE_VERSION}"
-        echo "::set-output name=GIT_COMMIT::${GIT_COMMIT}"
-        echo "::set-output name=GIT_TREE_STATE::${GIT_TREE_STATE}"
-        echo "::set-output name=GIT_VERSION::${GIT_VERSION}"
-        echo "::set-output name=GIT_MAJOR::${GIT_MAJOR}"
-        echo "::set-output name=GIT_MINOR::${GIT_MINOR}"
-        echo "::set-output name=BUILD_DATE::${BUILD_DATE}"
+  using: node16
+  main: dist/index.js

@@ -2,7 +2,6 @@ import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import { ExecOutput, ExecOptions } from "@actions/exec";
 import * as path from "path";
-import { exec as execChildProcess } from "node:child_process";
 
 function getInput(name: string): string | undefined {
   const value = core.getInput(name);
@@ -22,7 +21,6 @@ async function gitCommand(
     repo,
     ...args,
   ];
-  // const cmdString = cmd.join("");
   const output = await exec.getExecOutput("git", cmd, {
     cwd: repo,
     ...options,
@@ -61,23 +59,6 @@ async function unshallowRepo(repo: string): Promise<void> {
       throw new Error(`failed to unshallow repository (exit code ${exitCode})`);
     }
   }
-}
-
-function execNative(
-  command: string
-): Promise<{ error?: string; stdout: string; stderr: string }> {
-  return new Promise(function (resolve, reject) {
-    execChildProcess(command, (error, stdout, stderr) => {
-      stdout = stdout.trim();
-      stderr = stderr.trim();
-      if (error) {
-        reject({ error, stdout, stderr });
-        return;
-      }
-
-      resolve({ stdout, stderr });
-    });
-  });
 }
 
 function secondsSinceEpoch(d: Date): number {
