@@ -122,9 +122,12 @@ function getBuildDate(): string {
 
 async function run(): Promise<void> {
   const workspace = process.env["GITHUB_WORKSPACE"];
-  const repo = getInput("repo") ?? workspace ?? process.cwd();
+  let repo = getInput("repo") ?? workspace ?? process.cwd();
   if (!repo) {
     throw new Error("missing repo root: set the `repo` input variable.");
+  }
+  if (!path.isAbsolute(repo)) {
+    repo = path.join(process.cwd(), repo);
   }
 
   await unshallowRepo(repo);

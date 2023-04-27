@@ -43,15 +43,9 @@ jobs:
           - windows-latest
     steps:
       - uses: actions/checkout@v3
-      # - name: set env variables (unix)
-      #   run: |
-      #     echo "REPO_DEST=$HOME/some/git/repo" >> "$GITHUB_ENV"
-      #     echo "REPO_URL=https://github.com/romnn/film-borders.git" >> "$GITHUB_ENV"
-      # echo "action_state=yellow" | Out-File -FilePath $env:GITHUB_ENV -Append # no need for -Encoding utf8
 
       - name: clone repo into custom location
         run: |
-          # mkdir -p ./some/git/repo
           git clone https://github.com/romnn/film-borders.git ./some/git/repo
           ls -lia ./some/git/repo
 
