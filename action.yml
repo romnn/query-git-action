@@ -32,5 +32,5 @@ outputs:
   github_repo_name:
     value: ${{ steps.query.outputs.GITHUB_REPO_NAME }}
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
