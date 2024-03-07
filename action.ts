@@ -170,7 +170,8 @@ async function run(): Promise<void> {
   }
 
   // If not a valid semantic version, fail
-  const validSemVer = /^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
+  const validSemVer =
+    /^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
   if (!gitVersion.match(validSemVer)) {
     core.setFailed(
       `git version should be a valid semantic version. current value: ${gitVersion}`
